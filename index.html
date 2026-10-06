@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080807">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Pristine Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#080807;--bg1:#0d0c0a;--bg2:#131210;--bg3:#1b1a15;--bg4:#26241d;
+  --line:rgba(255,255,255,.06);--line2:rgba(255,255,255,.13);
+  --text:#f5f0e8;--text2:#a59d90;--text3:#6e685e;
+  --gold:#c8a84a;--gold2:#ddb95e;--gold-lt:rgba(200,168,74,.1);--gold-mid:rgba(200,168,74,.28);
+  --green:#3db870;--green-lt:rgba(61,184,112,.13);
+  --red:#e05570;--red-lt:rgba(224,85,112,.13);
+  --amber:#d4823a;--amber-lt:rgba(212,130,58,.14);
+  --blue:#5a9ae0;--blue-lt:rgba(90,154,224,.14);
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --serif:'Playfair Display',Georgia,'Times New Roman',serif;
+  --r:16px;--rs:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{min-height:100dvh}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;text-align:left}
+input,select,textarea{font:inherit;font-size:16px;color:var(--text);background:var(--bg3);border:1px solid var(--line2);border-radius:var(--rs);padding:11px 12px;width:100%;outline:none;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--text2) 50%),linear-gradient(135deg,var(--text2) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+.num{font-variant-numeric:tabular-nums}
+.hidden{display:none!important}
+.muted{color:var(--text3)}
+label.f{display:block;font-size:13px;color:var(--text2);margin:14px 0 6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2 label.f{margin-top:14px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:var(--rs);background:var(--bg4);border:1px solid var(--line2);font-weight:500;font-size:14px;white-space:nowrap;text-align:center}
+.btn:hover{border-color:var(--text3)}
+.btn:active{transform:scale(.98)}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#14110a;font-weight:600}
+.btn-gold:hover{background:var(--gold2);border-color:var(--gold2)}
+.btn-danger{background:transparent;border-color:rgba(224,85,112,.4);color:var(--red)}
+.btn-block{width:100%}
+.btn-sm{min-height:34px;padding:0 12px;font-size:13px}
+.link{color:var(--gold);font-size:14px;text-decoration:underline;text-underline-offset:3px}
+
+/* auth screens */
+.auth{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px}
+.auth-box{width:100%;max-width:360px}
+.wordmark{font-family:var(--serif);font-size:44px;line-height:1;letter-spacing:-.02em}
+.auth-sub{color:var(--text2);margin:8px 0 26px}
+.msg{margin-top:14px;font-size:14px;line-height:1.5;color:var(--text2)}
+.msg.err{color:var(--red)}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--bg3);padding:2px 6px;border-radius:6px}
+
+/* shell */
+.app{display:flex;min-height:100dvh}
+.rail{display:none}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;background:rgba(8,8,7,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top .wordmark{font-size:22px;margin-right:auto}
+main{width:100%;max-width:920px;margin:0 auto;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 96px)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:rgba(13,12,10,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;color:var(--text3);font-size:11px;font-weight:500;text-align:center}
+.tab svg{width:22px;height:22px}
+.tab.on{color:var(--gold)}
+@media(min-width:900px){
+  .tabbar{display:none}
+  .rail{display:flex;flex-direction:column;gap:4px;width:200px;flex-shrink:0;padding:22px 12px;border-right:1px solid var(--line);position:sticky;top:0;height:100dvh;background:var(--bg1)}
+  .rail .wordmark{font-size:26px;padding:0 10px 22px}
+  .rail .tab{flex:none;flex-direction:row;gap:10px;padding:10px;border-radius:var(--rs);font-size:14px}
+  .rail .tab.on{background:var(--gold-lt)}
+  .top .wordmark{visibility:hidden}
+  main{padding:26px 28px 60px}
+}
+
+/* segmented control */
+.seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:3px}
+.seg button{padding:6px 12px;border-radius:99px;font-size:13px;color:var(--text2);font-weight:500}
+.seg button.on{background:var(--bg4);color:var(--text)}
+
+/* page headings */
+.h1{font-family:var(--serif);font-size:30px;line-height:1.1;letter-spacing:-.015em;margin-bottom:4px}
+.lede{color:var(--text2);font-size:14px;margin-bottom:18px}
+.h2{font-size:16px;font-weight:600;margin:28px 0 10px}
+.panel{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+
+/* owed hero */
+.owed{padding:4px 0 18px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.owed-label{color:var(--text2);font-size:14px}
+.owed-num{font-family:var(--serif);font-size:56px;line-height:1.05;letter-spacing:-.02em;color:var(--gold2);margin:2px 0 6px}
+.owed-sub{color:var(--text2);font-size:14px;max-width:60ch}
+.owed-list{margin-top:14px;display:flex;flex-direction:column}
+.owed-row{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.owed-row:first-child{border-top:0}
+.owed-row .nm{flex:1}
+.owed-row .ct{color:var(--text3);font-size:13px}
+
+/* toolbar + chips */
+.toolbar{display:flex;gap:8px;margin-bottom:12px}
+.toolbar input{flex:1}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:7px 12px;border-radius:99px;border:1px solid var(--line2);font-size:13px;color:var(--text2);font-weight:500}
+.chip .c{color:var(--text3);margin-left:4px}
+.chip.on{background:var(--gold-lt);border-color:var(--gold-mid);color:var(--gold2)}
+.chip.on .c{color:var(--gold)}
+
+/* list rows */
+.list{display:flex;flex-direction:column;gap:6px}
+.row{position:relative;display:flex;gap:12px;width:100%;padding:13px 14px 13px 18px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row:hover{border-color:var(--line2)}
+.row-bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+.row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row-title{font-weight:600;font-size:15px}
+.row-sub{color:var(--text2);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-end{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.row-amt{font-weight:600}
+.row-age{font-size:12px;color:var(--text3)}
+.row-age.late{color:var(--red)}
+.pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.pill-amber{background:var(--amber-lt);color:var(--amber)}
+.pill-blue{background:var(--blue-lt);color:var(--blue)}
+.pill-gold{background:var(--gold-lt);color:var(--gold2)}
+.pill-green{background:var(--green-lt);color:var(--green)}
+.pill-red{background:var(--red-lt);color:var(--red)}
+.pill-text3{background:var(--bg4);color:var(--text2)}
+.empty{padding:36px 16px;text-align:center;color:var(--text2);font-size:14px;border:1px dashed var(--line2);border-radius:12px}
+.loading{padding:40px 0;text-align:center;color:var(--text3)}
+
+/* sheet (modal) */
+.sheet-wrap{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet{position:relative;width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;background:var(--bg1);border:1px solid var(--line2);border-radius:20px 20px 0 0;padding:22px 18px calc(env(safe-area-inset-bottom,0px) + 22px);animation:up .22s ease-out}
+@media(min-width:700px){.sheet-wrap{align-items:center}.sheet{border-radius:20px}}
+@keyframes up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:99px;background:var(--bg3);font-size:20px;line-height:1;text-align:center;color:var(--text2)}
+.sheet h2{font-family:var(--serif);font-size:24px;font-weight:400;padding-right:40px;line-height:1.15}
+.sheet .sub{color:var(--text2);font-size:14px;margin-top:4px}
+.act{margin-top:18px;padding:14px;background:var(--bg2);border:1px solid var(--gold-mid);border-radius:12px}
+.act .f{margin-top:0}
+.inline{display:flex;gap:8px}
+.inline input{flex:1}
+.status-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.facts{margin-top:18px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.facts dt{color:var(--text3)}
+details.edit{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+details.edit summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--text2);padding:6px 0}
+.sheet-foot{display:flex;gap:8px;margin-top:20px}
+.sheet-foot .btn{flex:1}
+
+/* labor */
+.lab-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.lab-head input[type=date]{width:auto}
+.lab-compare{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.lab-col{padding:16px;background:var(--bg2)}
+.lab-col+.lab-col{border-left:1px solid var(--line)}
+.lab-col .k{color:var(--text2);font-size:14px}
+.lab-pct{font-family:var(--serif);font-size:46px;line-height:1.05;letter-spacing:-.02em;margin:2px 0 4px}
+.lab-pct.green{color:var(--green)}.lab-pct.amber{color:var(--amber)}.lab-pct.red{color:var(--red)}
+.lab-col .d{color:var(--text3);font-size:13px}
+.lab-target{font-size:13px;color:var(--text3);margin-bottom:16px}
+.crew{width:100%;border-collapse:collapse;font-size:14px}
+.crew th{text-align:left;font-weight:500;color:var(--text3);font-size:12px;padding:0 6px 6px}
+.crew td{padding:5px 6px;border-top:1px solid var(--line);vertical-align:middle}
+.crew td input{padding:8px 9px;text-align:right}
+.crew .w{width:84px}
+.crew .x{width:36px;text-align:center}
+.crew .x button{color:var(--text3);font-size:18px;width:32px;height:32px}
+.add-row{display:flex;gap:8px;margin-top:12px}
+.add-row select{flex:1}
+.hist{display:flex;flex-direction:column}
+.hist-row{display:grid;grid-template-columns:1fr 70px 70px;gap:8px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.hist-row .r{text-align:right}
+.hist-row.h{color:var(--text3);font-size:12px;border-top:0}
+.t-green{color:var(--green)}.t-amber{color:var(--amber)}.t-red{color:var(--red)}
+
+/* cash */
+.month-nav{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.month-nav .lbl{font-family:var(--serif);font-size:26px;flex:1}
+.month-nav button{width:40px;height:40px;border-radius:99px;background:var(--bg3);font-size:18px;text-align:center}
+.month-nav button:disabled{opacity:.3}
+.cash-net{font-family:var(--serif);font-size:52px;line-height:1.05;letter-spacing:-.02em}
+.cash-split{display:flex;gap:18px;margin:6px 0 16px;font-size:14px;color:var(--text2)}
+.cash-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.day-h{font-size:13px;color:var(--text3);margin:18px 0 6px}
+.cash-row{display:flex;gap:10px;align-items:center;width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;margin-bottom:6px}
+.cash-row .m{flex:1;min-width:0}
+.cash-row .d1{font-weight:500}
+.cash-row .d2{font-size:12px;color:var(--text3)}
+.amt-in{color:var(--green);font-weight:600}
+.amt-out{color:var(--red);font-weight:600}
+
+/* settings */
+.set-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.set-row:first-child{border-top:0}
+.set-row .m{flex:1;min-width:0}
+.set-row .m .s{font-size:12px;color:var(--text3)}
+.set-row select,.set-row input{width:auto;padding:7px 30px 7px 10px;font-size:14px}
+.set-row input.rate{width:90px;padding-right:10px;text-align:right}
+.off{opacity:.45}
+.addform{display:grid;gap:8px;margin-top:12px;grid-template-columns:1fr}
+@media(min-width:600px){.addform{grid-template-columns:2fr 1fr 1fr auto}}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);transform:translateX(-50%);z-index:80;background:var(--bg4);border:1px solid var(--line2);padding:11px 16px;border-radius:12px;font-size:14px;max-width:90vw;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.toast.err{border-color:rgba(224,85,112,.5);color:#ffb3c1}
+@media(min-width:900px){.toast{bottom:28px}}
+</style>
+</head>
+<body>
+
+<!-- SETUP NEEDED -->
+<section id="scr-config" class="auth hidden">
+  <div class="auth-box">
+    <div class="wordmark">Pristine</div>
+    <p class="auth-sub">Almost ready.</p>
+    <p class="msg">Open this file, find <span class="code">CONFIG</span> near the bottom, and paste in your Supabase project URL and publishable key. Then upload it again.</p>
+  </div>
+</section>
+
+<!-- LOGIN -->
+<section id="scr-login" class="auth hidden">
+  <div class="auth-box">
+    <div class="wordmark">Pristine</div>
+    <p class="auth-sub">Shop operations</p>
+    <form id="login-form" autocomplete="on">
+      <label class="f" for="li-email">Email</label>
+      <input id="li-email" type="email" autocomplete="username" required>
+      <label class="f" for="li-pass">Password</label>
+      <input id="li-pass" type="password" autocomplete="current-password" required>
+      <button class="btn btn-gold btn-block" style="margin-top:18px" type="submit">Sign in</button>
+    </form>
+    <p style="margin-top:14px"><button class="link" onclick="forgotPassword()">Forgot password</button></p>
+    <div id="login-msg" class="msg"></div>
+  </div>
+</section>
+
+<!-- SET PASSWORD (invite or reset link) -->
+<section id="scr-setpw" class="auth hidden">
+  <div class="auth-box">
+    <div class="wordmark">Pristine</div>
+    <p class="auth-sub">Choose your password.</p>
+    <form id="setpw-form">
+      <label class="f" for="pw-1">New password (8+ characters)</label>
+      <input id="pw-1" type="password" autocomplete="new-password" minlength="8" required>
+      <label class="f" for="pw-2">Type it again</label>
+      <input id="pw-2" type="password" autocomplete="new-password" minlength="8" required>
+      <button class="btn btn-gold btn-block" style="margin-top:18px" type="submit">Save password</button>
+    </form>
+    <div id="setpw-msg" class="msg"></div>
+  </div>
+</section>
+
+<!-- APP -->
+<div id="scr-app" class="app hidden">
+  <nav class="rail" id="rail" aria-label="Main"></nav>
+  <div class="main-col">
+    <header class="top">
+      <div class="wordmark">Pristine</div>
+      <div class="seg" id="loc-seg" role="group" aria-label="Location"></div>
+    </header>
+    <main id="view"></main>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
+</div>
+
+<div id="sheet-wrap" class="sheet-wrap hidden" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <button class="sheet-x" onclick="closeSheet()" aria-label="Close">×</button>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG — paste your two Supabase values here
+// Supabase → Project Settings → API (or Data API)
+// Use the PUBLISHABLE / anon key. NEVER the secret / service_role key.
+// ═══════════════════════════════════════════════════════════════
+const CONFIG = {
+  url: 'https://wvasehkhaobnfxvreodt.supabase.co',
+  key: 'sb_publishable_F-1hyfZi-ub_dxyszDqDVw_GHdnV826',
+  laborTarget: 30,   // labor % goal: at or under = green, up to +5 = amber, above = red
+};
+
+// ── constants ──────────────────────────────────────────────────
+const TZ = {oahu:'Pacific/Honolulu', tucson:'America/Phoenix'};
+const LOC_NAME = {oahu:'Oahu', tucson:'Tucson', both:'Both'};
+const KIND_NAME = {dealer:'Dealer', auction:'Auction', fleet:'Fleet', other:'Other'};
+const STATUS = {
+  needs_quote:{label:'Needs quote', color:'amber'},
+  quoted:     {label:'Quoted',      color:'blue'},
+  in_shop:    {label:'In shop',     color:'gold'},
+  done:       {label:'Done',        color:'green'},
+  picked_up:  {label:'Picked up',   color:'green'},
+  invoiced:   {label:'Invoiced',    color:'red'},
+  paid:       {label:'Paid',        color:'text3'},
+  cancelled:  {label:'Cancelled',   color:'text3'},
+};
+const ORDER = ['needs_quote','quoted','in_shop','done','picked_up','invoiced','paid'];
+const CAR_FILTERS = [
+  {id:'open',        label:'All open',    test:c=>!['paid','cancelled'].includes(c.status)},
+  {id:'needs_quote', label:'Needs quote', test:c=>c.status==='needs_quote'},
+  {id:'quoted',      label:'Quoted',      test:c=>c.status==='quoted'},
+  {id:'in_shop',     label:'In shop',     test:c=>c.status==='in_shop'},
+  {id:'to_invoice',  label:'To invoice',  test:c=>c.status==='done'||c.status==='picked_up'},
+  {id:'unpaid',      label:'Unpaid',      test:c=>c.status==='invoiced'},
+  {id:'paid',        label:'Paid',        test:c=>c.status==='paid'},
+];
+const CASH_CATS = {in:['Customer','Dealer','Auction','Other'], out:['Bills','Supplies','Payroll','Other']};
+const ICONS = {
+  cars:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="13" r=".6" fill="currentColor"/><circle cx="16.5" cy="13" r=".6" fill="currentColor"/></svg>',
+  labor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',
+  cash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
+};
+const TABS = [
+  {id:'cars', label:'Cars'},
+  {id:'labor', label:'Labor', mgmt:true},
+  {id:'cash', label:'Cash'},
+  {id:'settings', label:'Settings'},
+];
+
+// ── helpers ────────────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const val = id => (document.getElementById(id)?.value ?? '').trim();
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const numOrNull = v => { const s = String(v ?? '').replace(/[$,\s]/g,''); if(s==='') return null; const n = Number(s); return isNaN(n) ? null : n; };
+const num = v => numOrNull(v) ?? 0;
+const fmtMoney = n => (n==null || isNaN(n)) ? '—' : '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:Number(n)%1?2:0, maximumFractionDigits:2});
+const sumAmt = arr => arr.reduce((a,c)=>a+(Number(c.quote_amount)||0),0);
+const plural = (n,w) => n===1 ? w : w+'s';
+const todayIn = loc => new Intl.DateTimeFormat('en-CA',{timeZone:TZ[loc]||TZ.oahu}).format(new Date());
+const fmtDate = d => d ? new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+const fmtDay = d => new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+const fmtStamp = ts => ts ? new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+const daysSince = d => d ? Math.max(0, Math.round((new Date(todayIn('oahu')+'T12:00:00') - new Date(d+'T12:00:00'))/86400000)) : 0;
+const who = id => S.team[id]?.full_name || '—';
+
+let toastTimer;
+function toast(msg, err){
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.add('hidden'), err ? 5000 : 2400);
+}
+async function q(promise, okMsg){
+  const {data, error} = await promise;
+  if(error){ toast(error.message, true); throw error; }
+  if(okMsg) toast(okMsg);
+  return data;
+}
+const timers = {};
+function debounce(key, fn, ms){ clearTimeout(timers[key]); timers[key] = setTimeout(fn, ms); }
+
+// ── state ──────────────────────────────────────────────────────
+const S = {
+  user:null, profile:null, team:{}, started:false,
+  loc: localStorage.getItem('ops-loc') || '',
+  tab: localStorage.getItem('ops-tab') || 'cars',
+  cars:[], accounts:[], carFilter:'open', carSearch:'', owedRows:[], openCarId:null,
+  laborLoc:'oahu', laborDate:null, laborDay:null, laborShifts:[], laborStaff:[], laborHist:[],
+  cashMonth:null, cashEntries:[],
+};
+const isMgmt = () => ['owner','manager'].includes(S.profile?.role);
+const isOwner = () => S.profile?.role === 'owner';
+const locList = () => S.loc === 'both' ? ['oahu','tucson'] : [S.loc];
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════════
+function show(id){
+  ['scr-config','scr-login','scr-setpw','scr-app'].forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+}
+
+const configured = CONFIG.url.startsWith('http') && !CONFIG.key.startsWith('PASTE');
+const hashParams = new URLSearchParams(location.hash.slice(1));
+const linkType = hashParams.get('type');
+const linkError = hashParams.get('error_description');
+let sb = null;
+
+async function boot(){
+  if(!configured){ show('scr-config'); return; }
+  sb = supabase.createClient(CONFIG.url, CONFIG.key);
+  sb.auth.onAuthStateChange((event) => {
+    if(event === 'PASSWORD_RECOVERY') show('scr-setpw');
+    if(event === 'SIGNED_OUT'){ S.started = false; show('scr-login'); }
+  });
+  const {data:{session}} = await sb.auth.getSession();
+  if(linkError){
+    show('scr-login');
+    const m = $('#login-msg'); m.className = 'msg err';
+    m.textContent = linkError.replace(/\+/g,' ') + '. Ask for a new invite, or use Forgot password.';
+    history.replaceState(null,'',location.pathname);
+    return;
+  }
+  if(session && (linkType === 'invite' || linkType === 'recovery')){ show('scr-setpw'); return; }
+  if(session) startApp(); else show('scr-login');
+}
+
+$('#login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const m = $('#login-msg'); m.className = 'msg'; m.textContent = 'Signing in…';
+  const {error} = await sb.auth.signInWithPassword({email: val('li-email'), password: $('#li-pass').value});
+  if(error){ m.className = 'msg err'; m.textContent = error.message === 'Invalid login credentials' ? 'Email or password is wrong.' : error.message; return; }
+  m.textContent = ''; startApp();
+});
+
+async function forgotPassword(){
+  const email = val('li-email'); const m = $('#login-msg');
+  if(!email){ m.className = 'msg err'; m.textContent = 'Type your email above first, then tap Forgot password.'; return; }
+  const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname});
+  m.className = error ? 'msg err' : 'msg';
+  m.textContent = error ? error.message : 'Check your email for a link to set a new password.';
+}
+
+$('#setpw-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const a = $('#pw-1').value, b = $('#pw-2').value, m = $('#setpw-msg');
+  if(a !== b){ m.className = 'msg err'; m.textContent = 'Passwords don’t match.'; return; }
+  const {error} = await sb.auth.updateUser({password: a});
+  if(error){ m.className = 'msg err'; m.textContent = error.message; return; }
+  history.replaceState(null,'',location.pathname);
+  toast('Password saved'); startApp();
+});
+
+async function signOut(){ await sb.auth.signOut(); location.reload(); }
+
+// ═══════════════════════════════════════════════════════════════
+// APP SHELL
+// ═══════════════════════════════════════════════════════════════
+async function startApp(){
+  if(S.started) return; S.started = true;
+  show('scr-app');
+  $('#view').innerHTML = '<div class="loading">Loading…</div>';
+  const {data:{user}} = await sb.auth.getUser();
+  S.user = user;
+  const {data:profile} = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  if(!profile){
+    $('#view').innerHTML = '<div class="empty">Your login works, but your team profile is missing. Ask the owner to run the profile catch-up step in Supabase.</div>';
+    return;
+  }
+  S.profile = profile;
+  if(!['oahu','tucson','both'].includes(S.loc)) S.loc = profile.location || (isOwner() ? 'both' : 'oahu');
+  await loadTeam();
+  drawShell();
+  subscribe();
+  go(TABS.find(t => t.id === S.tab && (!t.mgmt || isMgmt())) ? S.tab : 'cars');
+}
+
+async function loadTeam(){
+  const team = await q(sb.from('profiles').select('id,full_name,role,location').order('full_name'));
+  S.team = Object.fromEntries(team.map(p => [p.id, p]));
+}
+
+function drawShell(){
+  const tabs = TABS.filter(t => !t.mgmt || isMgmt());
+  const html = tabs.map(t => `<button class="tab" data-tab="${t.id}" onclick="go('${t.id}')">${ICONS[t.id]}<span>${t.label}</span></button>`).join('');
+  $('#tabbar').innerHTML = html;
+  $('#rail').innerHTML = '<div class="wordmark">Pristine</div>' + html;
+  drawLocSeg();
+}
+function drawLocSeg(){
+  $('#loc-seg').innerHTML = ['oahu','tucson','both'].map(l =>
+    `<button class="${S.loc===l?'on':''}" onclick="setLoc('${l}')" aria-pressed="${S.loc===l}">${LOC_NAME[l]}</button>`).join('');
+}
+function setLoc(l){ S.loc = l; localStorage.setItem('ops-loc', l); drawLocSeg(); go(S.tab); }
+
+function go(tab){
+  S.tab = tab; localStorage.setItem('ops-tab', tab);
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  window.scrollTo(0,0);
+  ({cars:renderCars, labor:renderLabor, cash:renderCash, settings:renderSettings})[tab]();
+}
+
+function subscribe(){
+  sb.channel('ops-live')
+    .on('postgres_changes', {event:'*', schema:'public', table:'vehicles'}, () =>
+      debounce('cars', async () => { if(S.tab === 'cars'){ await loadCars(); drawCars(); } }, 700))
+    .on('postgres_changes', {event:'*', schema:'public', table:'cash_entries'}, () =>
+      debounce('cash', () => { if(S.tab === 'cash') renderCash(); }, 700))
+    .subscribe();
+}
+
+// ── sheet ──────────────────────────────────────────────────────
+function sheet(html){ $('#sheet-body').innerHTML = html; $('#sheet-wrap').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeSheet(){ $('#sheet-wrap').classList.add('hidden'); document.body.style.overflow = ''; S.openCarId = null; }
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && !$('#sheet-wrap').classList.contains('hidden')) closeSheet(); });
+
+// ═══════════════════════════════════════════════════════════════
+// CARS
+// ═══════════════════════════════════════════════════════════════
+async function loadAccounts(){ S.accounts = await q(sb.from('accounts').select('*').order('name')); }
+async function loadCars(){
+  const since = new Date(Date.now() - 60*86400000).toISOString();
+  S.cars = await q(sb.from('vehicles')
+    .select('*, accounts(name,kind)')
+    .in('location', locList())
+    .or(`status.not.in.(paid,cancelled),paid_at.gte."${since}"`)
+    .order('date_in', {ascending:false})
+    .order('created_at', {ascending:false})
+    .limit(1000));
+}
+
+async function renderCars(){
+  $('#view').innerHTML = `
+    <section class="owed" id="cars-hero"><div class="loading">Loading cars…</div></section>
+    <div class="toolbar">
+      <input id="car-search" type="search" placeholder="Search stock #, VIN, model, dealer" value="${esc(S.carSearch)}" oninput="S.carSearch=this.value;drawCarList()">
+      <button class="btn btn-gold" onclick="openAddCar()">Add car</button>
+    </div>
+    <div class="chips" id="car-chips"></div>
+    <div class="list" id="car-list"></div>`;
+  await Promise.all([loadAccounts(), loadCars()]);
+  drawCars();
+}
+
+function drawCars(){
+  if(!$('#cars-hero')) return;
+  const unpaid = S.cars.filter(c => c.status === 'invoiced');
+  const toInv = S.cars.filter(c => c.status === 'done' || c.status === 'picked_up');
+  const by = {};
+  unpaid.forEach(c => { const n = c.accounts?.name || 'Unknown'; by[n] ||= {t:0, n:0}; by[n].t += Number(c.quote_amount)||0; by[n].n++; });
+  S.owedRows = Object.entries(by).sort((a,b) => b[1].t - a[1].t);
+  const ready = sumAmt(toInv);
+  $('#cars-hero').innerHTML = `
+    <div class="owed-label">Owed by dealers${S.loc==='both'?'':' in '+LOC_NAME[S.loc]}</div>
+    <div class="owed-num num">${fmtMoney(sumAmt(unpaid))}</div>
+    <div class="owed-sub">${unpaid.length} invoiced ${plural(unpaid.length,'car')} waiting on payment.${toInv.length ? ` ${toInv.length} more ${plural(toInv.length,'car')} (${fmtMoney(ready)}) ready to invoice.` : ''}</div>
+    ${S.owedRows.length ? `<div class="owed-list">${S.owedRows.map(([n,v],i) =>
+      `<button class="owed-row" onclick="filterDealer(${i})"><span class="nm">${esc(n)}</span><span class="ct">${v.n} ${plural(v.n,'car')}</span><span class="num">${fmtMoney(v.t)}</span></button>`).join('')}</div>` : ''}`;
+  $('#car-chips').innerHTML = CAR_FILTERS.map(f =>
+    `<button class="chip ${S.carFilter===f.id?'on':''}" onclick="setCarFilter('${f.id}')">${f.label}<span class="c">${S.cars.filter(f.test).length}</span></button>`).join('');
+  drawCarList();
+}
+function setCarFilter(id){ S.carFilter = id; drawCars(); }
+function filterDealer(i){
+  const name = S.owedRows[i]?.[0]; if(!name) return;
+  S.carFilter = 'unpaid'; S.carSearch = name; $('#car-search').value = name; drawCars();
+}
+
+function drawCarList(){
+  const f = CAR_FILTERS.find(x => x.id === S.carFilter) || CAR_FILTERS[0];
+  const s = S.carSearch.trim().toLowerCase();
+  let list = S.cars.filter(f.test);
+  if(s) list = list.filter(c => [c.year_make_model,c.stock_no,c.vin_last6,c.color,c.service,c.accounts?.name,c.square_invoice_no]
+    .some(v => (v||'').toLowerCase().includes(s)));
+  $('#car-list').innerHTML = list.length ? list.map(carRow).join('') :
+    `<div class="empty">${s ? 'No cars match that search.' : S.carFilter==='open' ? 'No open cars. Tap Add car when one comes in.' : 'Nothing here right now.'}</div>`;
+}
+
+function ageLabel(c){
+  if(c.status === 'paid') return {t:'Paid ' + (c.paid_at ? new Date(c.paid_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''), late:false};
+  if(c.status === 'invoiced' && c.invoiced_at){
+    const d = Math.round((Date.now() - new Date(c.invoiced_at)) / 86400000);
+    return {t: d===0 ? 'Invoiced today' : `Invoiced ${d} ${plural(d,'day')} ago`, late: d > 14};
+  }
+  const d = daysSince(c.date_in);
+  return {t: d===0 ? 'In today' : `In ${d} ${plural(d,'day')}`, late:false};
+}
+
+function carRow(c){
+  const st = STATUS[c.status]; const age = ageLabel(c);
+  const sub = [c.accounts?.name, c.stock_no && '#'+c.stock_no, c.vin_last6 && 'VIN '+c.vin_last6].filter(Boolean).map(esc).join('  ·  ');
+  return `<button class="row" onclick="openCar('${c.id}')">
+    <span class="row-bar" style="background:var(--${st.color==='text3'?'bg4':st.color})"></span>
+    <span class="row-main">
+      <span class="row-title">${esc(c.year_make_model || 'Car')}${c.color ? ` <span class="muted">${esc(c.color)}</span>` : ''}</span>
+      <span class="row-sub">${sub}</span>
+      ${c.service ? `<span class="row-sub">${esc(c.service)}</span>` : ''}
+    </span>
+    <span class="row-end">
+      <span class="row-amt num">${c.quote_amount != null ? fmtMoney(c.quote_amount) : '<span class="muted">No price</span>'}</span>
+      <span class="pill pill-${st.color}">${st.label}</span>
+      <span class="row-age ${age.late?'late':''}">${age.t}</span>
+    </span>
+  </button>`;
+}
+
+function accountOptions(selectedId, onlyActive){
+  const accts = S.accounts.filter(a => (!onlyActive || a.active || a.id === selectedId) && (S.loc === 'both' || a.location === S.loc || a.id === selectedId));
+  return accts.map(a => `<option value="${a.id}" ${a.id===selectedId?'selected':''}>${esc(a.name)} (${KIND_NAME[a.kind]}${S.loc==='both'?', '+LOC_NAME[a.location]:''})</option>`).join('');
+}
+
+function openAddCar(){
+  const opts = accountOptions(null, true);
+  if(!opts){
+    sheet(`<h2>Add car</h2><p class="sub" style="margin-top:12px">${isMgmt() ? 'Add your dealers and auction first, in Settings.' : 'No dealers are set up yet. Ask a manager to add them in Settings.'}</p>
+      ${isMgmt() ? `<div class="sheet-foot"><button class="btn btn-gold" onclick="closeSheet();go('settings')">Open Settings</button></div>` : ''}`);
+    return;
+  }
+  sheet(`<h2>Add car</h2>
+    <p class="sub">Leave the price blank if it still needs a quote.</p>
+    <label class="f" for="nc-acct">From</label><select id="nc-acct">${opts}</select>
+    <div class="grid2">
+      <div><label class="f" for="nc-stock">Stock #</label><input id="nc-stock" autocapitalize="characters"></div>
+      <div><label class="f" for="nc-vin">VIN (last 6)</label><input id="nc-vin" maxlength="17" autocapitalize="characters"></div>
+    </div>
+    <label class="f" for="nc-ymm">Year, make, model</label><input id="nc-ymm" placeholder="2022 Toyota Tacoma">
+    <div class="grid2">
+      <div><label class="f" for="nc-color">Color</label><input id="nc-color"></div>
+      <div><label class="f" for="nc-price">Price</label><input id="nc-price" inputmode="decimal" placeholder="$0"></div>
+    </div>
+    <label class="f" for="nc-svc">Service</label><input id="nc-svc" placeholder="Full detail, recon, interior only…">
+    <label class="f" for="nc-notes">Notes</label><textarea id="nc-notes"></textarea>
+    <div class="sheet-foot"><button class="btn btn-gold" onclick="saveNewCar(this)">Add car</button></div>`);
+}
+
+async function saveNewCar(btn){
+  const acct = S.accounts.find(a => a.id === val('nc-acct'));
+  if(!acct){ toast('Pick who the car is from.', true); return; }
+  const price = numOrNull(val('nc-price'));
+  btn.disabled = true;
+  try{
+    await q(sb.from('vehicles').insert({
+      account_id: acct.id, location: acct.location,
+      stock_no: val('nc-stock') || null, vin_last6: val('nc-vin').toUpperCase() || null,
+      year_make_model: val('nc-ymm') || null, color: val('nc-color') || null,
+      service: val('nc-svc') || null, notes: val('nc-notes') || null,
+      quote_amount: price, status: price != null ? 'in_shop' : 'needs_quote',
+    }), 'Car added');
+    closeSheet(); await loadCars(); drawCars();
+  }catch(e){ btn.disabled = false; }
+}
+
+function openCar(id){
+  const c = S.cars.find(x => x.id === id); if(!c) return;
+  S.openCarId = id; sheet(carDetail(c));
+}
+
+function actionArea(c){
+  const one = (label, status) => `<div class="act"><button class="btn btn-gold btn-block" onclick="setStatus('${c.id}','${status}')">${label}</button></div>`;
+  switch(c.status){
+    case 'needs_quote': return `<div class="act"><label class="f" for="q-amt">Quote</label>
+      <div class="inline"><input id="q-amt" inputmode="decimal" placeholder="$0"><button class="btn btn-gold" onclick="saveQuote('${c.id}')">Save quote</button></div></div>`;
+    case 'quoted': return one('Start work', 'in_shop');
+    case 'in_shop': return one('Mark done', 'done');
+    case 'done': case 'picked_up': return `<div class="act"><label class="f" for="inv-no">Square invoice #</label>
+      <div class="inline"><input id="inv-no" placeholder="Optional" value="${esc(c.square_invoice_no||'')}"><button class="btn btn-gold" onclick="markInvoiced('${c.id}')">Mark invoiced</button></div></div>`;
+    case 'invoiced': return `<div class="act"><label class="f">How did they pay?</label>
+      <div class="inline"><button class="btn btn-gold" style="flex:1" onclick="markPaid('${c.id}',false)">Square or check</button><button class="btn" style="flex:1" onclick="markPaid('${c.id}',true)">Cash</button></div></div>`;
+    default: return '';
+  }
+}
+
+function carDetail(c){
+  const st = STATUS[c.status];
+  const facts = [
+    ['From', c.accounts?.name], ['Location', LOC_NAME[c.location]], ['Price', c.quote_amount!=null ? fmtMoney(c.quote_amount) : null],
+    ['Service', c.service], ['Dropped off', fmtDate(c.date_in)], ['Out', c.date_out ? fmtDate(c.date_out) : null],
+    ['Quoted', c.quoted_at ? `${fmtStamp(c.quoted_at)}${c.quoted_by ? ' by '+who(c.quoted_by) : ''}` : null],
+    ['Invoice #', c.square_invoice_no], ['Invoiced', c.invoiced_at ? fmtStamp(c.invoiced_at) : null],
+    ['Paid', c.paid_at ? fmtStamp(c.paid_at) : null], ['Added by', c.created_by ? who(c.created_by) : null], ['Notes', c.notes],
+  ].filter(f => f[1]);
+  return `<h2>${esc(c.year_make_model || 'Car')}</h2>
+    <p class="sub">${[c.color, c.stock_no && 'Stock #'+c.stock_no, c.vin_last6 && 'VIN '+c.vin_last6].filter(Boolean).map(esc).join('  ·  ')}</p>
+    <div style="margin-top:10px"><span class="pill pill-${st.color}">${st.label}</span></div>
+    ${actionArea(c)}
+    <dl class="facts">${facts.map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    <details class="edit"><summary>Move to a different step</summary>
+      <div class="status-chips">${[...ORDER,'cancelled'].map(s => `<button class="chip ${s===c.status?'on':''}" onclick="setStatus('${c.id}','${s}')">${STATUS[s].label}</button>`).join('')}</div>
+    </details>
+    <details class="edit"><summary>Edit details</summary>
+      <label class="f" for="ec-acct">From</label><select id="ec-acct">${accountOptions(c.account_id, false)}</select>
+      <div class="grid2">
+        <div><label class="f" for="ec-stock">Stock #</label><input id="ec-stock" value="${esc(c.stock_no||'')}"></div>
+        <div><label class="f" for="ec-vin">VIN (last 6)</label><input id="ec-vin" value="${esc(c.vin_last6||'')}"></div>
+      </div>
+      <label class="f" for="ec-ymm">Year, make, model</label><input id="ec-ymm" value="${esc(c.year_make_model||'')}">
+      <div class="grid2">
+        <div><label class="f" for="ec-color">Color</label><input id="ec-color" value="${esc(c.color||'')}"></div>
+        <div><label class="f" for="ec-price">Price</label><input id="ec-price" inputmode="decimal" value="${c.quote_amount ?? ''}"></div>
+      </div>
+      <label class="f" for="ec-svc">Service</label><input id="ec-svc" value="${esc(c.service||'')}">
+      <label class="f" for="ec-inv">Square invoice #</label><input id="ec-inv" value="${esc(c.square_invoice_no||'')}">
+      <label class="f" for="ec-notes">Notes</label><textarea id="ec-notes">${esc(c.notes||'')}</textarea>
+      <div class="sheet-foot">
+        ${isOwner() ? `<button class="btn btn-danger" onclick="deleteCar('${c.id}')">Delete car</button>` : ''}
+        <button class="btn btn-gold" onclick="saveCarEdits('${c.id}')">Save changes</button>
+      </div>
+    </details>`;
+}
+
+async function updateCar(id, patch, msg){
+  await q(sb.from('vehicles').update(patch).eq('id', id), msg);
+  await loadCars(); drawCars();
+  if(S.openCarId === id){ const c = S.cars.find(x => x.id === id); if(c) sheet(carDetail(c)); else closeSheet(); }
+}
+
+async function saveQuote(id){
+  const amt = numOrNull(val('q-amt'));
+  if(amt == null || amt <= 0){ toast('Enter the quote amount.', true); return; }
+  await updateCar(id, {quote_amount: amt, status: 'quoted'}, 'Quote saved');
+}
+
+async function setStatus(id, status){
+  const i = ORDER.indexOf(status), patch = {status};
+  if(status !== 'cancelled'){   // moving backward clears later stamps
+    if(i < ORDER.indexOf('paid')) patch.paid_at = null;
+    if(i < ORDER.indexOf('invoiced')) patch.invoiced_at = null;
+    if(i < ORDER.indexOf('picked_up')) patch.date_out = null;
+    if(i < ORDER.indexOf('quoted')){ patch.quoted_at = null; patch.quoted_by = null; }
+  }
+  await updateCar(id, patch, 'Moved to ' + STATUS[status].label);
+}
+
+async function markInvoiced(id){
+  await updateCar(id, {status:'invoiced', square_invoice_no: val('inv-no') || null}, 'Marked invoiced');
+}
+
+async function markPaid(id, cash){
+  const c = S.cars.find(x => x.id === id); if(!c) return;
+  if(cash && !(Number(c.quote_amount) > 0)){ toast('Add a price under Edit details first, so the cash ledger gets the right amount.', true); return; }
+  await updateCar(id, {status:'paid'}, 'Marked paid');
+  if(cash){
+    await q(sb.from('cash_entries').insert({
+      location: c.location, direction: 'in', amount: c.quote_amount, category: c.accounts?.kind === 'auction' ? 'Auction' : 'Dealer',
+      description: [c.accounts?.name, c.year_make_model, c.stock_no && '#'+c.stock_no].filter(Boolean).join(' – '),
+      vehicle_id: c.id, entry_date: todayIn(c.location),
+    }), 'Paid and added to the cash ledger');
+  }
+}
+
+async function saveCarEdits(id){
+  const acct = S.accounts.find(a => a.id === val('ec-acct'));
+  await updateCar(id, {
+    account_id: acct?.id, location: acct?.location,
+    stock_no: val('ec-stock') || null, vin_last6: val('ec-vin').toUpperCase() || null,
+    year_make_model: val('ec-ymm') || null, color: val('ec-color') || null,
+    quote_amount: numOrNull(val('ec-price')), service: val('ec-svc') || null,
+    square_invoice_no: val('ec-inv') || null, notes: val('ec-notes') || null,
+  }, 'Changes saved');
+}
+
+async function deleteCar(id){
+  if(!confirm('Delete this car for good? This can’t be undone.')) return;
+  await q(sb.from('vehicles').delete().eq('id', id), 'Car deleted');
+  closeSheet(); await loadCars(); drawCars();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LABOR
+// ═══════════════════════════════════════════════════════════════
+async function renderLabor(){
+  if(!isMgmt()){ go('cars'); return; }
+  if(S.loc !== 'both') S.laborLoc = S.loc;
+  const loc = S.laborLoc;
+  if(!S.laborDate) S.laborDate = todayIn(loc);
+  $('#view').innerHTML = '<div class="loading">Loading labor sheet…</div>';
+  const [day, staff, hist] = await Promise.all([
+    q(sb.from('labor_days').select('*').eq('work_date', S.laborDate).eq('location', loc).maybeSingle()),
+    q(sb.from('staff').select('*').eq('location', loc).order('name')),
+    q(sb.from('labor_day_summary').select('*').eq('location', loc).order('work_date', {ascending:false}).limit(14)),
+  ]);
+  S.laborDay = day; S.laborStaff = staff; S.laborHist = hist;
+  S.laborShifts = day ? await q(sb.from('labor_shifts').select('*, staff(name)').eq('labor_day_id', day.id)) : [];
+  S.laborShifts.sort((a,b) => (a.staff?.name||'').localeCompare(b.staff?.name||''));
+  drawLabor();
+}
+
+const pctClass = p => p == null ? '' : p <= CONFIG.laborTarget ? 'green' : p <= CONFIG.laborTarget + 5 ? 'amber' : 'red';
+
+function drawLabor(){
+  const loc = S.laborLoc, d = S.laborDay;
+  const head = `<h1 class="h1">Labor</h1>
+    <p class="lede">${fmtDay(S.laborDate)}${S.loc==='both' ? '' : ', '+LOC_NAME[loc]}</p>
+    <div class="lab-head">
+      <input type="date" value="${S.laborDate}" onchange="S.laborDate=this.value||todayIn(S.laborLoc);renderLabor()" aria-label="Day">
+      ${S.laborDate !== todayIn(loc) ? `<button class="btn btn-sm" onclick="S.laborDate=todayIn(S.laborLoc);renderLabor()">Today</button>` : ''}
+      ${S.loc==='both' ? `<div class="seg">${['oahu','tucson'].map(l => `<button class="${loc===l?'on':''}" onclick="S.laborLoc='${l}';renderLabor()">${LOC_NAME[l]}</button>`).join('')}</div>` : ''}
+    </div>`;
+  if(!d){
+    $('#view').innerHTML = head + `<div class="empty">No sheet for this day yet.<div style="margin-top:14px"><button class="btn btn-gold" onclick="startLaborDay()">Start the sheet</button></div></div>` + histHtml();
+    return;
+  }
+  const active = S.laborStaff.filter(s => s.active && !S.laborShifts.some(x => x.staff_id === s.id));
+  $('#view').innerHTML = head + `
+    <div class="lab-compare">
+      <div class="lab-col"><div class="k">Expected</div><div class="lab-pct num" id="lab-exp-pct">—</div><div class="d num" id="lab-exp-d"></div></div>
+      <div class="lab-col"><div class="k">Actual</div><div class="lab-pct num" id="lab-act-pct">—</div><div class="d num" id="lab-act-d"></div></div>
+    </div>
+    <p class="lab-target">Goal: ${CONFIG.laborTarget}% or less. ${d.closed ? 'This day is closed.' : ''}</p>
+    <div class="grid2">
+      <div><label class="f" for="rev-exp">Expected revenue (morning)</label>
+        <input id="rev-exp" inputmode="decimal" value="${d.expected_revenue ?? ''}" placeholder="$0" oninput="updateLaborNums()" onchange="saveLaborDay('expected_revenue', num(this.value))"></div>
+      <div><label class="f" for="rev-act">Actual revenue (end of day)</label>
+        <input id="rev-act" inputmode="decimal" value="${d.actual_revenue ?? ''}" placeholder="$0" oninput="updateLaborNums()" onchange="saveLaborDay('actual_revenue', numOrNull(this.value))"></div>
+    </div>
+    <h2 class="h2">Crew</h2>
+    ${S.laborShifts.length ? `<div class="panel" style="padding:10px 8px;overflow-x:auto"><table class="crew">
+      <thead><tr><th>Name</th><th class="w">Rate</th><th class="w">Planned hrs</th><th class="w">Actual hrs</th><th class="x"></th></tr></thead>
+      <tbody>${S.laborShifts.map(s => `<tr>
+        <td>${esc(s.staff?.name || '—')}</td>
+        <td class="w num muted">${fmtMoney(s.hourly_rate)}</td>
+        <td class="w"><input id="sh-exp-${s.id}" inputmode="decimal" value="${s.expected_hours ?? ''}" oninput="updateLaborNums()" onchange="saveShift('${s.id}','expected_hours',num(this.value))" aria-label="Planned hours"></td>
+        <td class="w"><input id="sh-act-${s.id}" inputmode="decimal" value="${s.actual_hours ?? ''}" oninput="updateLaborNums()" onchange="saveShift('${s.id}','actual_hours',numOrNull(this.value))" aria-label="Actual hours"></td>
+        <td class="x"><button onclick="removeShift('${s.id}')" aria-label="Remove">×</button></td>
+      </tr>`).join('')}</tbody></table></div>`
+      : `<div class="empty">Nobody on the sheet yet.${S.laborStaff.length ? '' : ' Add your crew and their wages in Settings first.'}</div>`}
+    <div class="add-row">
+      ${active.length ? `<select id="add-staff" aria-label="Add person">${active.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
+        <button class="btn" onclick="addShift()">Add</button>` : ''}
+      ${!S.laborShifts.length ? `<button class="btn" onclick="copyLastCrew()">Copy last crew</button>` : ''}
+    </div>
+    <label class="f" for="lab-notes">Notes (who went home early, no-shows)</label>
+    <textarea id="lab-notes" onchange="saveLaborDay('notes', this.value.trim() || null)">${esc(d.notes||'')}</textarea>
+    <div class="sheet-foot" style="max-width:320px">
+      <button class="btn ${d.closed ? '' : 'btn-gold'}" onclick="saveLaborDay('closed', ${!d.closed}).then(renderLabor)">${d.closed ? 'Reopen day' : 'Close out the day'}</button>
+    </div>` + histHtml();
+  updateLaborNums();
+}
+
+function histHtml(){
+  if(!S.laborHist.length) return '';
+  const cell = p => p == null ? '<span class="muted">—</span>' : `<span class="t-${pctClass(p)}">${p}%</span>`;
+  return `<h2 class="h2">Last two weeks</h2><div class="hist">
+    <div class="hist-row h"><span>Day</span><span class="r">Expected</span><span class="r">Actual</span></div>
+    ${S.laborHist.map(h => `<button class="hist-row" onclick="S.laborDate='${h.work_date}';renderLabor()">
+      <span>${fmtDay(h.work_date)}</span><span class="r num">${cell(h.expected_labor_pct)}</span><span class="r num">${cell(h.actual_labor_pct)}</span></button>`).join('')}
+  </div>`;
+}
+
+function updateLaborNums(){
+  if(!$('#lab-exp-pct')) return;
+  const expRev = num(val('rev-exp')), actRevRaw = val('rev-act'), actRev = num(actRevRaw);
+  let expLab = 0, actLab = 0, anyAct = false;
+  S.laborShifts.forEach(s => {
+    expLab += num(val('sh-exp-'+s.id)) * Number(s.hourly_rate);
+    const a = val('sh-act-'+s.id); if(a !== ''){ anyAct = true; actLab += num(a) * Number(s.hourly_rate); }
+  });
+  const ep = expRev > 0 ? Math.round(expLab / expRev * 1000) / 10 : null;
+  const ap = actRev > 0 && anyAct ? Math.round(actLab / actRev * 1000) / 10 : null;
+  $('#lab-exp-pct').textContent = ep == null ? '—' : ep + '%'; $('#lab-exp-pct').className = 'lab-pct num ' + pctClass(ep);
+  $('#lab-act-pct').textContent = ap == null ? '—' : ap + '%'; $('#lab-act-pct').className = 'lab-pct num ' + pctClass(ap);
+  $('#lab-exp-d').textContent = `${fmtMoney(expLab)} labor on ${fmtMoney(expRev)}`;
+  $('#lab-act-d').textContent = anyAct || actRevRaw ? `${fmtMoney(actLab)} labor on ${fmtMoney(actRev)}` : 'Fill in at end of day';
+}
+
+async function startLaborDay(){
+  await q(sb.from('labor_days').insert({work_date: S.laborDate, location: S.laborLoc}), 'Sheet started');
+  renderLabor();
+}
+async function saveLaborDay(field, value){
+  await q(sb.from('labor_days').update({[field]: value}).eq('id', S.laborDay.id));
+  S.laborDay[field] = value;
+}
+async function saveShift(id, field, value){
+  await q(sb.from('labor_shifts').update({[field]: value}).eq('id', id));
+  const s = S.laborShifts.find(x => x.id === id); if(s) s[field] = value;
+}
+async function addShift(){
+  const st = S.laborStaff.find(s => s.id === val('add-staff')); if(!st) return;
+  await q(sb.from('labor_shifts').insert({labor_day_id: S.laborDay.id, staff_id: st.id, hourly_rate: st.hourly_rate, expected_hours: 0}));
+  renderLabor();
+}
+async function removeShift(id){
+  await q(sb.from('labor_shifts').delete().eq('id', id));
+  renderLabor();
+}
+async function copyLastCrew(){
+  const prev = await q(sb.from('labor_days').select('id').eq('location', S.laborLoc).lt('work_date', S.laborDate).order('work_date', {ascending:false}).limit(1));
+  if(!prev.length){ toast('No earlier sheet to copy from.', true); return; }
+  const ps = await q(sb.from('labor_shifts').select('staff_id, expected_hours').eq('labor_day_id', prev[0].id));
+  const rows = ps.map(p => { const st = S.laborStaff.find(s => s.id === p.staff_id && s.active);
+    return st ? {labor_day_id: S.laborDay.id, staff_id: st.id, hourly_rate: st.hourly_rate, expected_hours: p.expected_hours} : null; }).filter(Boolean);
+  if(!rows.length){ toast('That sheet had nobody on it.', true); return; }
+  await q(sb.from('labor_shifts').insert(rows), `Copied ${rows.length} ${plural(rows.length,'person')}`);
+  renderLabor();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CASH
+// ═══════════════════════════════════════════════════════════════
+const monthBounds = ym => { const [y,m] = ym.split('-').map(Number);
+  return [`${ym}-01`, m === 12 ? `${y+1}-01-01` : `${y}-${String(m+1).padStart(2,'0')}-01`]; };
+const monthLabel = ym => { const [y,m] = ym.split('-').map(Number); return new Date(y, m-1, 1).toLocaleDateString('en-US',{month:'long', year:'numeric'}); };
+const shiftMonth = (ym, d) => { const [y,m] = ym.split('-').map(Number); const t = new Date(y, m-1+d, 1); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`; };
+const thisMonth = () => todayIn(S.loc === 'tucson' ? 'tucson' : 'oahu').slice(0,7);
+
+async function renderCash(){
+  if(!S.cashMonth) S.cashMonth = thisMonth();
+  if(!$('#cash-root')) $('#view').innerHTML = '<div id="cash-root"><div class="loading">Loading cash…</div></div>';
+  const [first, next] = monthBounds(S.cashMonth);
+  const [entries, hist] = await Promise.all([
+    q(sb.from('cash_entries').select('*').in('location', locList()).gte('entry_date', first).lt('entry_date', next)
+      .order('entry_date', {ascending:false}).order('created_at', {ascending:false})),
+    q(sb.from('cash_monthly').select('*').in('location', locList()).order('month', {ascending:false}).limit(48)),
+  ]);
+  S.cashEntries = entries;
+  if(!$('#cash-root')) return;
+  const tin = entries.filter(e => e.direction === 'in').reduce((a,e) => a + Number(e.amount), 0);
+  const tout = entries.filter(e => e.direction === 'out').reduce((a,e) => a + Number(e.amount), 0);
+  const net = tin - tout;
+  const byDay = {}; entries.forEach(e => (byDay[e.entry_date] ||= []).push(e));
+  const months = {}; hist.forEach(h => { const k = h.month.slice(0,7); months[k] ||= {i:0, o:0}; months[k].i += Number(h.cash_in); months[k].o += Number(h.cash_out); });
+  const past = Object.entries(months).filter(([k]) => k !== S.cashMonth).sort((a,b) => b[0].localeCompare(a[0]));
+  const atNow = S.cashMonth >= thisMonth();
+  $('#cash-root').innerHTML = `
+    <div class="month-nav">
+      <button onclick="S.cashMonth=shiftMonth(S.cashMonth,-1);renderCash()" aria-label="Previous month">‹</button>
+      <div class="lbl">${monthLabel(S.cashMonth)}</div>
+      <button onclick="S.cashMonth=shiftMonth(S.cashMonth,1);renderCash()" ${atNow?'disabled':''} aria-label="Next month">›</button>
+    </div>
+    <div class="owed-label">Cash on hand this month${S.loc==='both'?'':', '+LOC_NAME[S.loc]}</div>
+    <div class="cash-net num" style="color:${net<0?'var(--red)':'var(--text)'}">${net<0?'−':''}${fmtMoney(Math.abs(net))}</div>
+    <div class="cash-split num"><span><span class="amt-in">+${fmtMoney(tin)}</span> in</span><span><span class="amt-out">−${fmtMoney(tout)}</span> out</span></div>
+    <div class="cash-btns">
+      <button class="btn btn-gold" onclick="openCashForm('in')">Cash in</button>
+      <button class="btn" onclick="openCashForm('out')">Cash out</button>
+    </div>
+    ${entries.length ? Object.entries(byDay).map(([d, list]) => `<div class="day-h">${fmtDay(d)}</div>` + list.map(e => `
+      <${isMgmt()?'button':'div'} class="cash-row" ${isMgmt()?`onclick="openCashForm('${e.direction}','${e.id}')"`:''}>
+        <span class="m"><span class="d1">${esc(e.description)}</span><br>
+          <span class="d2">${[e.category, who(e.logged_by), S.loc==='both' ? LOC_NAME[e.location] : null].filter(Boolean).map(esc).join('  ·  ')}</span></span>
+        <span class="num ${e.direction==='in'?'amt-in':'amt-out'}">${e.direction==='in'?'+':'−'}${fmtMoney(e.amount)}</span>
+      </${isMgmt()?'button':'div'}>`).join('')).join('')
+      : `<div class="empty" style="margin-top:12px">No cash logged for ${monthLabel(S.cashMonth)}. ${atNow ? 'If cash was left in the drawer from last month, log it as Cash in, “Carried over.”' : ''}</div>`}
+    ${past.length ? `<h2 class="h2">Past months</h2><div class="hist">
+      <div class="hist-row h" style="grid-template-columns:1fr 90px 90px"><span>Month</span><span class="r">In</span><span class="r">Net</span></div>
+      ${past.map(([k,v]) => `<button class="hist-row" style="grid-template-columns:1fr 90px 90px" onclick="S.cashMonth='${k}';renderCash();window.scrollTo(0,0)">
+        <span>${monthLabel(k)}</span><span class="r num amt-in">${fmtMoney(v.i)}</span><span class="r num">${fmtMoney(v.i - v.o)}</span></button>`).join('')}
+    </div>` : ''}`;
+}
+
+function openCashForm(dir, id){
+  const e = id ? S.cashEntries.find(x => x.id === id) : null;
+  const loc = e?.location || (S.loc === 'both' ? 'oahu' : S.loc);
+  sheet(`<h2>${e ? 'Edit entry' : dir === 'in' ? 'Cash in' : 'Cash out'}</h2>
+    <p class="sub">${dir === 'in' ? 'Cash a customer or dealer paid.' : 'Cash taken out to pay for something.'}</p>
+    <label class="f" for="ce-amt">Amount</label><input id="ce-amt" inputmode="decimal" placeholder="$0" value="${e ? e.amount : ''}">
+    <label class="f" for="ce-desc">${dir === 'in' ? 'Who paid / for what' : 'What it paid for'}</label>
+    <input id="ce-desc" placeholder="${dir === 'in' ? 'Walk-in full detail' : 'Electric bill'}" value="${esc(e?.description || '')}">
+    <div class="grid2">
+      <div><label class="f" for="ce-cat">Type</label><select id="ce-cat">${CASH_CATS[dir].map(c => `<option ${e?.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label class="f" for="ce-date">Date</label><input id="ce-date" type="date" value="${e?.entry_date || todayIn(loc)}"></div>
+    </div>
+    ${S.loc === 'both' ? `<label class="f" for="ce-loc">Location</label><select id="ce-loc">${['oahu','tucson'].map(l => `<option value="${l}" ${l===loc?'selected':''}>${LOC_NAME[l]}</option>`).join('')}</select>` : ''}
+    <div class="sheet-foot">
+      ${e ? `<button class="btn btn-danger" onclick="deleteCash('${e.id}')">Delete</button>` : ''}
+      <button class="btn btn-gold" onclick="saveCash('${dir}', ${e ? `'${e.id}'` : 'null'}, this)">${e ? 'Save changes' : dir === 'in' ? 'Log cash in' : 'Log cash out'}</button>
+    </div>`);
+  setTimeout(() => document.getElementById('ce-amt')?.focus(), 60);
+}
+
+async function saveCash(dir, id, btn){
+  const amount = numOrNull(val('ce-amt')), description = val('ce-desc');
+  if(!(amount > 0)){ toast('Enter an amount.', true); return; }
+  if(!description){ toast('Add a short description.', true); return; }
+  const row = {direction: dir, amount, description, category: val('ce-cat'), entry_date: val('ce-date') || null,
+    location: S.loc === 'both' ? val('ce-loc') : S.loc};
+  btn.disabled = true;
+  try{
+    if(id) await q(sb.from('cash_entries').update(row).eq('id', id), 'Entry updated');
+    else await q(sb.from('cash_entries').insert(row), dir === 'in' ? 'Cash in logged' : 'Cash out logged');
+    closeSheet(); renderCash();
+  }catch(e){ btn.disabled = false; }
+}
+
+async function deleteCash(id){
+  if(!confirm('Delete this cash entry?')) return;
+  await q(sb.from('cash_entries').delete().eq('id', id), 'Entry deleted');
+  closeSheet(); renderCash();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════════
+async function renderSettings(){
+  $('#view').innerHTML = '<div class="loading">Loading…</div>';
+  await Promise.all([loadAccounts(), loadTeam()]);
+  const staff = isMgmt() ? await q(sb.from('staff').select('*').order('location').order('name')) : [];
+  const me = S.profile;
+  const locOpts = sel => ['oahu','tucson'].map(l => `<option value="${l}" ${sel===l?'selected':''}>${LOC_NAME[l]}</option>`).join('');
+  $('#view').innerHTML = `
+    <h1 class="h1">Settings</h1>
+    <p class="lede">Signed in as ${esc(S.user.email)} (${esc(me.role)})</p>
+
+    ${isMgmt() ? `
+    <h2 class="h2">Dealers and auction</h2>
+    <div class="panel">
+      ${S.accounts.length ? S.accounts.map(a => `<div class="set-row ${a.active?'':'off'}">
+        <div class="m">${esc(a.name)}<div class="s">${KIND_NAME[a.kind]}, ${LOC_NAME[a.location]}${a.active?'':', hidden'}</div></div>
+        <button class="btn btn-sm" onclick="toggleAccount('${a.id}', ${!a.active})">${a.active ? 'Hide' : 'Show'}</button>
+      </div>`).join('') : '<p class="muted">None yet. Add each dealer and the auction below.</p>'}
+      <div class="addform">
+        <input id="na-name" placeholder="Dealer or auction name" aria-label="Name">
+        <select id="na-kind" aria-label="Type">${Object.entries(KIND_NAME).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+        <select id="na-loc" aria-label="Location">${locOpts(S.loc==='tucson'?'tucson':'oahu')}</select>
+        <button class="btn btn-gold" onclick="addAccount()">Add</button>
+      </div>
+    </div>
+
+    <h2 class="h2">Crew and wages</h2>
+    <div class="panel">
+      ${staff.length ? staff.map(s => `<div class="set-row ${s.active?'':'off'}">
+        <div class="m">${esc(s.name)}<div class="s">${LOC_NAME[s.location]}${s.active?'':', inactive'}</div></div>
+        <input class="rate num" inputmode="decimal" value="${s.hourly_rate}" aria-label="Hourly rate for ${esc(s.name)}" onchange="saveStaff('${s.id}',{hourly_rate:num(this.value)})">
+        <span class="muted">/hr</span>
+        <button class="btn btn-sm" onclick="saveStaff('${s.id}',{active:${!s.active}}).then(renderSettings)">${s.active ? 'Remove' : 'Bring back'}</button>
+      </div>`).join('') : '<p class="muted">Add each person and their hourly wage. The labor sheet uses these.</p>'}
+      <div class="addform">
+        <input id="ns-name" placeholder="Name" aria-label="Name">
+        <input id="ns-rate" inputmode="decimal" placeholder="$/hr" aria-label="Hourly rate">
+        <select id="ns-loc" aria-label="Location">${locOpts(S.loc==='tucson'?'tucson':'oahu')}</select>
+        <button class="btn btn-gold" onclick="addStaff()">Add</button>
+      </div>
+    </div>` : ''}
+
+    <h2 class="h2">Team logins</h2>
+    <div class="panel">
+      ${Object.values(S.team).map(p => `<div class="set-row">
+        <div class="m">${isOwner() ? `<input value="${esc(p.full_name)}" style="width:100%;max-width:220px" aria-label="Name" onchange="saveProfile('${p.id}',{full_name:this.value.trim()})">` : esc(p.full_name)}</div>
+        ${isOwner() && p.id !== S.user.id ? `
+          <select aria-label="Role" onchange="saveProfile('${p.id}',{role:this.value})">${['crew','manager','owner'].map(r => `<option ${p.role===r?'selected':''}>${r}</option>`).join('')}</select>
+          <select aria-label="Location" onchange="saveProfile('${p.id}',{location:this.value||null})"><option value="">Both</option>${locOpts(p.location)}</select>`
+          : `<span class="muted">${esc(p.role)}${p.location ? ', '+LOC_NAME[p.location] : ''}</span>`}
+      </div>`).join('')}
+      ${isOwner() ? `<p class="msg">To add someone: Supabase → Authentication → Users → Invite user. They’ll show up here once they accept. Crew can log cars and cash. Managers also get the labor sheet and wages.</p>` : ''}
+    </div>
+
+    <div style="margin-top:28px"><button class="btn btn-danger" onclick="signOut()">Sign out</button></div>`;
+}
+
+async function addAccount(){
+  const name = val('na-name'); if(!name){ toast('Enter a name.', true); return; }
+  await q(sb.from('accounts').insert({name, kind: val('na-kind'), location: val('na-loc')}), name + ' added');
+  renderSettings();
+}
+async function toggleAccount(id, active){ await q(sb.from('accounts').update({active}).eq('id', id)); renderSettings(); }
+async function addStaff(){
+  const name = val('ns-name'); if(!name){ toast('Enter a name.', true); return; }
+  await q(sb.from('staff').insert({name, hourly_rate: num(val('ns-rate')), location: val('ns-loc')}), name + ' added');
+  renderSettings();
+}
+async function saveStaff(id, patch){ await q(sb.from('staff').update(patch).eq('id', id), 'Saved'); }
+async function saveProfile(id, patch){ await q(sb.from('profiles').update(patch).eq('id', id), 'Saved'); await loadTeam(); }
+
+boot();
+</script>
+</body>
+</html>
